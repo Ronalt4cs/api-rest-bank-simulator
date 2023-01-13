@@ -4,6 +4,14 @@
 
 **Projeto backend construído no módulo 2 do curso da CUBOS ACADEMY**
 
+
+## Para instalar e rodar
+
+```bash
+  npm install
+  node src/index.js
+```
+
 ## Funcionalidades:
 
 -   Criar conta bancária
