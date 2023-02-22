@@ -29,20 +29,20 @@ const validateEmail = (email) => {
    }
    return true
 }
-const validateRouteParams = (info1, info2, info3, info4, info5, info6) => {
-   info3 = info3 || true;
-   info4 = info4 || true;
-   info5 = info5 || true;
-   info6 = info6 || true;
-   if (!info1 || !info2 || !info3 || !info4 || !info5 || !info6) {
+const validateRouteParams = (param1, param2, param3, param4, param5, param6) => {
+   param3 = param3 || true;
+   param4 = param4 || true;
+   param5 = param5 || true;
+   param6 = param6 || true;
+   if (!param1 || !param2 || !param3 || !param4 || !param5 || !param6) {
       return false
    }
    return true
 }
-const findIndexAccount = (num) => {
+const findIndexAccount = (accountNumber) => {
 
    const indexFound = db.contas.findIndex((account) => {
-      return num == account.numero
+      return accountNumber == account.numero
    });
    return Number(indexFound);
 }
@@ -51,6 +51,7 @@ const getExtractByIndexAccount = (indexAccount) => {
    const withdraws = [];
    const deposits = [];
    const tranfers = [];
+
    for (const withdraw of db.saques) {
       if (accountFound.numero === withdraw.numero_conta) withdraws.push(withdraw);
    }
@@ -74,9 +75,9 @@ const listAccounts = (req, res) => {
    res.status(200).json(db.contas);
 }
 const createAccount = (req, res) => {
-   const { nome, cpf, data_nascimento, telefone, email, senha } = req.body
+   const { nome: name, cpf, data_nascimento: dateOfBirth, telefone: phone, email, senha: password } = req.body
 
-   if (!validateRouteParams(nome, cpf, data_nascimento, telefone, email, senha)) {
+   if (!validateRouteParams(name, cpf, dateOfBirth, phone, email, password)) {
       return res.status(400).json({ "mensagem": "Preencha todos os campos!" });
    }
 
@@ -91,12 +92,12 @@ const createAccount = (req, res) => {
       numero: String(numAccount),
       saldo: 0,
       usuario: {
-         nome,
+         nome: name,
          cpf,
-         data_nascimento,
-         telefone,
+         data_nascimento: dateOfBirth,
+         telefone: phone,
          email,
-         senha
+         senha: password
       }
    });
    numAccount++;
@@ -104,13 +105,20 @@ const createAccount = (req, res) => {
    return
 }
 const updateAccounts = (req, res) => {
-   const { nome, cpf, data_nascimento, telefone, email, senha } = req.body
-   const { numeroConta } = req.params
+   const { accountNumber } = req.params
+   const {
+      nome: name,
+      cpf,
+      data_nascimento: dateOfBirth,
+      telefone: phone,
+      email,
+      senha: password
+   } = req.body
 
-   if (!validateRouteParams(nome, cpf, data_nascimento, telefone, email, senha)) {
+   if (!validateRouteParams(name, cpf, dateOfBirth, phone, email, password)) {
       return res.status(400).json({ "mensagem": "Preencha todos os campos!" });
    }
-   const indexAccount = findIndexAccount(numeroConta);
+   const indexAccount = findIndexAccount(accountNumber);
 
    if (indexAccount == -1) {
       return res.status(400).json({ "mensagem": "O número da conta não foi encontrado!" });
@@ -123,23 +131,23 @@ const updateAccounts = (req, res) => {
    }
 
    db.contas[indexAccount].usuario = {
-      nome,
+      nome: name,
       cpf,
-      data_nascimento,
-      telefone,
+      data_nascimento: dateOfBirth,
+      telefone: phone,
       email,
-      senha
+      senha: password
    }
    return res.status(201).send();
 
 }
 const deleteAccount = (req, res) => {
-   const { numeroConta } = req.params
+   const { numeroConta: accountNumber } = req.params
 
-   if (!numeroConta) {
+   if (!accountNumber) {
       return res.status(400).json({ "mensagem": "O número da conta é obrigatório!" });
    }
-   const indexAccount = findIndexAccount(numeroConta);
+   const indexAccount = findIndexAccount(accountNumber);
 
    if (indexAccount == -1) {
       return res.status(404).json({ "mensagem": "O número da conta não foi encontrado!" });
@@ -154,13 +162,13 @@ const deleteAccount = (req, res) => {
    return res.status(201).send();
 }
 const getBalance = (req, res) => {
-   const { numero_conta, senha } = req.query
+   const { numero_conta: accountNumber, senha: password } = req.query
 
-   if (!validateRouteParams(numero_conta, senha)) {
+   if (!validateRouteParams(accountNumber, password)) {
       return res.status(400).json({ "mensagem": "O número da conta e a senha são obrigatórios!" });
    }
 
-   const indexAccount = findIndexAccount(numero_conta);
+   const indexAccount = findIndexAccount(accountFound);
 
    if (indexAccount === -1) {
       return res.status(404).json({ "mensagem": "Conta bancária não encontrada!" });
@@ -168,7 +176,7 @@ const getBalance = (req, res) => {
 
    const accountFound = db.contas[indexAccount];
 
-   if (accountFound.usuario.senha !== senha) {
+   if (accountFound.usuario.senha !== password) {
       return res.status(400).json({ "mensagem": "Senha incorreta!" });
    }
 
@@ -176,13 +184,13 @@ const getBalance = (req, res) => {
 
 }
 const getExtract = (req, res) => {
-   const { numero_conta, senha } = req.query
+   const { numero_conta: accountNumber, senha: password } = req.query
 
-   if (!validateRouteParams(numero_conta, senha)) {
+   if (!validateRouteParams(accountNumber, password)) {
       return res.status(400).json({ "mensagem": "O número da conta e a senha são obrigatórios!" });
    }
 
-   const indexAccount = findIndexAccount(numero_conta);
+   const indexAccount = findIndexAccount(accountNumber);
 
    if (indexAccount === -1) {
       return res.status(404).json({ "mensagem": "Conta bancária não encontrada!" });
@@ -190,7 +198,7 @@ const getExtract = (req, res) => {
 
    const accountFound = db.contas[indexAccount];
 
-   if (accountFound.usuario.senha !== senha) {
+   if (accountFound.usuario.senha !== password) {
       return res.status(400).json({ "mensagem": "Senha incorreta!" });
    }
    const extract = getExtractByIndexAccount(indexAccount);
